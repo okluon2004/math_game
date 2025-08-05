@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,16 +10,96 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  String email = '';
-  String username = '';
-  String password = '';
+  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
   String role = 'student';
+  bool _isLoading = false;
 
-  void _register() {
+  void _register() async {
     if (_formKey.currentState!.validate()) {
-      // Thực hiện đăng ký tài khoản ở đây
-      Navigator.pop(context); // Quay lại màn hình đăng nhập
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        Map<String, dynamic> result = await AuthService.register(
+          _usernameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (result['success']) {
+            // Show success dialog with verification message
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => AlertDialog(
+                title: const Text('Đăng ký thành công'),
+                content: Text(result['message']),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close dialog
+                      Navigator.of(context).pop(); // Return to login screen
+                    },
+                    child: const Text('Đóng'),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            // Show error dialog
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Lỗi đăng ký'),
+                content: Text(result['message']),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Đóng'),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Lỗi'),
+              content: Text('Có lỗi xảy ra: ${e.toString()}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Đóng'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,20 +119,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
+                  controller: _usernameController,
                   decoration: const InputDecoration(labelText: 'Tên người dùng'),
-                  onChanged: (val) => username = val,
                   validator: (val) => val!.isEmpty ? "Nhập tên người dùng" : null,
                 ),
                 TextFormField(
+                  controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  onChanged: (val) => email = val,
-                  validator: (val) => val!.isEmpty ? "Nhập email" : null,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (val) {
+                    if (val!.isEmpty) return "Nhập email";
+                    if (!val.contains('@')) return "Email không hợp lệ";
+                    return null;
+                  },
                 ),
                 TextFormField(
+                  controller: _passwordController,
                   decoration: const InputDecoration(labelText: 'Mật khẩu'),
                   obscureText: true,
-                  onChanged: (val) => password = val,
-                  validator: (val) => val!.isEmpty ? "Nhập mật khẩu" : null,
+                  validator: (val) {
+                    if (val!.isEmpty) return "Nhập mật khẩu";
+                    if (val.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự";
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField(
@@ -64,9 +154,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onChanged: (val) => setState(() => role = val!),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _register,
-                  child: const Text('Đăng ký'),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _register,
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Đăng ký'),
+                  ),
                 ),
               ],
             ),
