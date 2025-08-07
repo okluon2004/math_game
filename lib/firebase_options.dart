@@ -16,6 +16,7 @@ import 'package:flutter/foundation.dart'
 /// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+
     if (kIsWeb) {
       throw UnsupportedError(
         'DefaultFirebaseOptions have not been configured for web - '
@@ -63,6 +64,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '112656822738',
     projectId: 'math-game-0207',
     storageBucket: 'math-game-0207.firebasestorage.app',
+    androidClientId: '112656822738-l1tu643q3ejnmr8s0kdduavm76pdrbst.apps.googleusercontent.com',
+    iosClientId: '112656822738-m7a9rbvn05aejutd8qm6ds42t95v37qu.apps.googleusercontent.com',
     iosBundleId: 'com.example.mathGame',
   );
+
 }

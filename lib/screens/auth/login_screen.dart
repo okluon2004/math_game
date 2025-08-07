@@ -3,6 +3,7 @@ import 'register_screen.dart';
 import '../student/student_dashboard.dart';
 import '../admin/admin_dashboard.dart';
 import '../../services/auth_service.dart';
+import '../../google_sign_in_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
           });
 
           if (result['success']) {
-            // Login successful, navigate based on role
             if (role == 'student') {
               Navigator.pushReplacement(
                 context,
@@ -49,10 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             }
           } else if (result['needsVerification'] == true) {
-            // Email not verified, show verification dialog
             _showEmailVerificationDialog(result['message']);
           } else {
-            // Show error dialog
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
@@ -73,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() {
             _isLoading = false;
           });
-          
+
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -115,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.of(context).pop(); // Close dialog first
+              Navigator.of(context).pop();
               await _resendVerificationEmail();
             },
             child: const Text('Gửi lại'),
@@ -128,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _resendVerificationEmail() async {
     try {
       Map<String, dynamic> result = await AuthService.resendEmailVerification();
-      
+
       if (mounted) {
         showDialog(
           context: context,
@@ -174,63 +172,70 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Đăng nhập')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const Text(
-                  "Hệ thống học tập",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (val) {
-                    if (val!.isEmpty) return "Nhập email";
-                    if (!val.contains('@')) return "Email không hợp lệ";
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Mật khẩu'),
-                  obscureText: true,
-                  validator: (val) => val!.isEmpty ? "Nhập mật khẩu" : null,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField(
-                  value: role,
-                  decoration: const InputDecoration(labelText: 'Vai trò'),
-                  items: const [
-                    DropdownMenuItem(value: 'student', child: Text('Học sinh')),
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  ],
-                  onChanged: (val) => setState(() => role = val!),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Đăng nhập'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Container(
+            width: 400, // hoặc bạn có thể dùng MediaQuery để responsive
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Hệ thống học tập",
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (val) {
+                      if (val!.isEmpty) return "Nhập email";
+                      if (!val.contains('@')) return "Email không hợp lệ";
+                      return null;
+                    },
                   ),
-                  child: const Text('Chưa có tài khoản? Đăng ký'),
-                ),
-              ],
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(labelText: 'Mật khẩu'),
+                    obscureText: true,
+                    validator: (val) => val!.isEmpty ? "Nhập mật khẩu" : null,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField(
+                    value: role,
+                    decoration: const InputDecoration(labelText: 'Vai trò'),
+                    items: const [
+                      DropdownMenuItem(value: 'student', child: Text('Học sinh')),
+                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    ],
+                    onChanged: (val) => setState(() => role = val!),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      child: _isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text('Đăng nhập'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GoogleSignInPage(),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    ),
+                    child: const Text('Chưa có tài khoản? Đăng ký'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

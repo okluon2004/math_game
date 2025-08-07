@@ -3,6 +3,7 @@ import 'screens/auth/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Bắt buộc cho các hàm async trước runApp
   await Firebase.initializeApp(
